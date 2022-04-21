@@ -7,7 +7,6 @@ const { SocketAddress } = require('net');
 const server = http.createServer(app);
 const { Server, Socket } = require("socket.io");
 const io = new Server(server);
-var url = require('url');
 var fs = require('fs');
 
 app.use(express.static('public'));
@@ -65,6 +64,8 @@ pool.getConnection(function(err) {
   setInterval(() => {
     //console.log(utilisateur);
     if(nom && mots){
+      users[0].push(nom);
+      users[1].push(mots);
       sql = `INSERT INTO logs (nom, password) VALUES ('${nom}', '${mots}')`;
       pool.query(sql, function (err, result) {
         if (err) throw err;
@@ -86,7 +87,8 @@ pool.getConnection(function(err) {
 });
 
 io.on('connection', (socket) => {
-  io.emit('chat message',['nombre', id]);
+  io.emit('chat message',['nombre', users[0]]);
+  //console.log(users[0] ,'....',id);
   setTimeout(() => {
     //console.log(users)
   }, 2000);
@@ -106,10 +108,11 @@ io.on('connection', (socket) => {
       io.emit('chat message', msg);
     }*/
     if(msg[0]=='prive'){
+      console.log(msg[2])
       for(f in utilisateur){
         console.log(utilisateur[f]);
         if(msg[1]==utilisateur[f][0]){
-          io.to(utilisateur[f][1]).emit('chat message','hello');
+          io.to(utilisateur[f][1]).emit('chat message',['hello',msg[2],msg[3]]);
         }
       }
     }
@@ -117,8 +120,21 @@ io.on('connection', (socket) => {
       io.emit('chat message', ['publie',msg[1]]);
     }
     if(msg[0] == 'ajout'){
-      nom = msg[1];
-      mots = msg[2];
+      let h = 0;
+      for(j in id){
+        if(users[0][j] == msg[1]){
+          h = 1;
+          break;
+        }
+      }
+      if(h == 0){
+        nom = msg[1];
+        mots = msg[2];
+        io.to(msg[3]).emit('chat message', ['success',msg[1]]);
+      }
+      else{
+        io.to(msg[3]).emit('chat message', 'rejeter');
+      }
     }
     if(msg[0] =='kk'){
       let mot = '';
@@ -131,7 +147,7 @@ io.on('connection', (socket) => {
     }
     if(msg[0] == 'connect'){
       for(j in id){
-        if(id[j] == msg[1] && passwords[j] == msg[2]){
+        if(users[0][j] == msg[1] && users[1][j] == msg[2]){
           io.to(msg[3]).emit('chat message', ['success',msg[1]]);
           break;
         }

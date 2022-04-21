@@ -147,7 +147,7 @@ img{
 .slide{
     animation-name: roule;
     animation-duration: 10s;
-    animation-timing-function: ease;
+    animation-timing-function: linear;
     animation-iteration-count: infinite;
     transition: 0.4s;
     z-index: 0;

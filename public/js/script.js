@@ -19,10 +19,13 @@ let main = document.getElementById('main');
 let main2 = document.getElementById('main2');
 
 let bd = document.getElementById('body');
-let chercher = document.getElementById('chercher');
+let voir = document.getElementById('voir');
+let amis = document.getElementById('amis');
+let fonds = document.getElementById('fonds');
+/*let chercher = document.getElementById('chercher');
 let conversation = document.getElementById('conversation');
 let statut = document.getElementById('statut');
-let tourne = document.getElementById('tourne');
+let tourne = document.getElementById('tourne');*/
 
 let photos = [];
 let i = 0;
@@ -33,7 +36,8 @@ for(;i<=2;i++){
     photos[i].setAttribute('class', 'slide');
     main.appendChild(photos[i]);
 }
-let x = 0;
+let x = 0;//compteur du slider
+//slider du login
 setInterval(() => {
     if(x == 0){
         document.getElementById(`${0}`).style.opacity = 100+'%';
@@ -59,7 +63,7 @@ window.addEventListener('load',()=>{
     train.style.zIndex = 0;
     trainM.style.zIndex = 0;
 })
-retour.addEventListener('click',()=>{
+retour.addEventListener('click',()=>{//revenire a l'ecran de connexion
     ajouter.style.visibility = 'hidden';
     connect.style.visibility = 'visible';
     connection.style.visibility = 'visible';
@@ -73,7 +77,7 @@ retour.addEventListener('click',()=>{
     trainM.style.zIndex = 0;
     document.getElementById('feuil').remove();
 })
-cree.addEventListener('click',()=>{
+cree.addEventListener('click',()=>{//aller a l'ecran de creation de compt
     ajouter.style.visibility = 'visible';
     connect.style.visibility = 'hidden';
     connection.style.visibility = 'hidden';
@@ -89,7 +93,7 @@ cree.addEventListener('click',()=>{
     feuil.setAttribute('id','feuil');
     main.appendChild(feuil);
 
-    setInterval(() => {
+    setInterval(() => {//tombes a l'infini
         let f = document.createElement('div');
         f.setAttribute('class','feuille');
         f.style.left = Math.random()*100 + '%';
@@ -99,52 +103,55 @@ cree.addEventListener('click',()=>{
     }, 1000);
 });
 let utilisateur;
+main2.style.visibility = 'hidden';
 if(document.cookie){
-    console.log(socket.id);
-    socket.emit('chat message',['kk',document.cookie])
+    //console.log(socket.id);
+    socket.emit('chat message',['kk',document.cookie]);
     if(document.cookie[0] == 1){
         main.style.visibility = 'hidden';
         main2.style.visibility = 'visible';
     }
 }
-connecter.addEventListener('click',()=>{
+connecter.addEventListener('click',()=>{//creation d'un compt
     if(login.value && password.value){
-        socket.emit('chat message', ['ajout',login.value,password.value]);
+        socket.emit('chat message', ['ajout',login.value,password.value,socket.id]);
+        document.cookie = `1${login.value}`;
+        socket.emit('chat message',['kk',document.cookie]);
+        //console.log(document.cookie);
+        //main.style.visibility = 'hidden';
+        //main2.style.visibility = 'visible';
         login.value = '';
         password.value = '';
-        document.cookie = `1${login.value}`;
-        console.log(document.cookie);
-        main.style.visibility = 'hidden';
-        main2.style.visibility = 'visible';
     }
 });
-connect.addEventListener('click',()=>{
+connect.addEventListener('click',()=>{//connexion a son compt
     if(nom.value && passwords.value){
-        console.log(socket.id);
+        //console.log(socket.id);
         socket.emit('chat message', ['connect',nom.value,passwords.value,socket.id]);
         nom.value = '';passwords.value = '';
     }
 });
-
+let users = [];
+let z = 0;
+let tout = document.createElement('div');
+tout.setAttribute('id','tout');
 socket.on('chat message', (msg)=> {
-    if(msg[0] == 'success'){
+    if(msg[0] == 'success'){//compt existant et mots de pass correct
         document.cookie = `1${msg[1]}`;
-        console.log(document.cookie);
+        //console.log(document.cookie);
+        socket.emit('chat message',['kk',document.cookie]);
         main.style.visibility = 'hidden';
         main2.style.visibility = 'visible';
     }
-    if(msg[0] == 'moi'){
-        my = msg[1];
+    if(msg[0] == 'hello'){//chat prive
+        alert("~"+msg[2]+"~"+msg[1]);
     }
-    if(msg == 'hello'){
-        alert('hello');
-    }
-    if(msg[0] == 'publie'){
+    /*if(msg[0] == 'publie'){//mur
         let s = document.createElement('div');
         s.textContent = msg[1];
         sms.appendChild(s);
-    }
-    if(msg[0] == 'nombre'){
+    }*/
+    if(msg[0] == 'nombre'){//utilisateurs
         if(users.length == 0){
             users = msg[1];
             let membre = document.createElement('div');
@@ -154,21 +161,23 @@ socket.on('chat message', (msg)=> {
                 let gens = document.createElement('div');
                 gens.setAttribute('class','profile');
                 gens.setAttribute('id',`${users[i]}`);
-                console.log(users[i]);
+                //console.log(users[i]);
                 gens.style.background = `rgb(${parseInt(Math.random()*255)},${parseInt(Math.random()*255)},${parseInt(Math.random()*255)})`;
                 gens.textContent = users[i][0];
                 membre.appendChild(gens);
                 z++;
                 let change = 0;
                 gens.addEventListener('click',()=>{
-                    if(change == 0){
+                    let chat = prompt('message');
+                    socket.emit('chat message',['prive',gens.id,chat,document.cookie]);
+                    /*if(change == 0){
                         let lui = document.createElement('div');
                         lui = gens;
                         sous.appendChild(lui);
                         change = 1;
                         lui.addEventListener('click',()=>{
-                            //alert(lui.id);
-                            socket.emit('chat message',['prive',lui.id])
+                            let chat = prompt('message');
+                            socket.emit('chat message',['prive',lui.id,chat,document.cookie]);
                         })
                     }
                     /*else{
@@ -176,12 +185,38 @@ socket.on('chat message', (msg)=> {
                     }*/
                 });
             }
-            main2.appendChild(membre);
+            tout.appendChild(membre);
         }
     }
 });
-
-statut.addEventListener('click',()=>{
+let clik = 0;
+voir.addEventListener('click',()=>{
+    if(clik == 0){
+        let ami = document.createElement('div');
+        ami.setAttribute('class','ami');
+        amis.appendChild(ami);
+        let quiter = document.createElement('div');
+        quiter.setAttribute('class','quitter');
+        setTimeout(() => {
+            ami.style.width = 100 + '%';
+            ami.style.height = 100 + '%';
+            ami.style.top = 0 + '%';
+            ami.style.left = 0 + '%';
+            amis.appendChild(quiter);
+            ami.appendChild(tout);
+        }, 500);
+        quiter.addEventListener('click',()=>{
+            ami.remove();
+            quiter.remove();
+            clik = 0;
+            console.log(clik);
+        });
+    }
+    clik = 1;
+    console.log(clik);
+    //amis.appendChild(document.getElementById('membre'));
+});
+/*statut.addEventListener('click',()=>{//rotation du solei
     statut.style.transition = 1 + 's';
     tourne.style.transform = 'rotate('+ 300 + 'deg)';
     setTimeout(() => {
@@ -190,17 +225,18 @@ statut.addEventListener('click',()=>{
 });
 let sms = document.getElementById('sms');
 let publie = document.getElementById('publie');
-publie.addEventListener('keydown',(e)=>{
+publie.addEventListener('keydown',(e)=>{//input du mur
     if(e.key == "Enter"){
         socket.emit('chat message', ['publie',publie.value])
         publie.value = '';
     }
 })
-let moi = document.getElementById('moi');
+let moi = document.getElementById('moi');//etat initials
 conversation.style.background = 'rgba(155, 197, 162)';
 main2.style.background = 'rgba(155, 197, 162)';
 conversation.style.border = 'solid 6px rgba(155, 197, 162)';
 conversation.style.marginBottom = 12 +'vh';
+//chaque click pour les ecrans differant
 moi.addEventListener('click',()=>{
     document.getElementById('souscription').style.visibility = 'hidden';
     publie.style.visibility = 'hidden';
@@ -285,8 +321,6 @@ chercher.addEventListener('click',()=>{
     conversation.style.border = 'none';
     document.getElementById('membre').style.visibility = 'visible';
 });
-let users = [];
-let z = 0;
 let sous = document.createElement('div');
 sous.setAttribute('id','souscription');
-main2.appendChild(sous);
+main2.appendChild(sous);*/

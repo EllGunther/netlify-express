@@ -1,5 +1,5 @@
 /*preliminaire soit importation des biblioteques indispensable */
-var mysql = require('mysql');
+//var mysql = require('mysql');
 const express = require('express');
 const app = express();
 const http = require('http');
